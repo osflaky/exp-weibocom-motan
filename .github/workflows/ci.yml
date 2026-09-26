@@ -1,0 +1,33 @@
+name: Workflow for Codecov
+on:
+  workflow_dispatch:
+jobs:
+  run:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - os: windows-latest
+          arch: x64
+          runner: windows-latest
+          expander_leg: windows-latest--x64
+    runs-on: ${{ matrix.runner }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Set up JDK 8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 8
+    - name: Install dependencies
+      shell: bash
+      run: mvn install "-DskipTests=true" "-Dmaven.javadoc.skip=true" -B -V
+    - name: Run tests and collect coverage
+      shell: bash
+      run: mvn -B test
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v5
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    name: run [${{ matrix.expander_leg }}]
+    timeout-minutes: 150
